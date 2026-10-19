@@ -82,5 +82,6 @@ export async function ask({ messages, spotifyToken }: AskRequest) {
     stopWhen: isStepCount(12),
   })
 
-  return { answer: result.text, trace, model: modelId(), usage: result.totalUsage }
+  const answer = result.text || `_Stopped after ${result.steps.length} steps without a final answer. Try a more specific question._`
+  return { answer, trace, model: modelId(), usage: result.totalUsage }
 }

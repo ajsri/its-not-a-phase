@@ -99,7 +99,8 @@ question ─▶ LLM ─▶ run_sql ─────▶ DuckDB (plays table, in me
 - `data/` and `.env.local` are gitignored. **Don't commit your export**: it includes the IP address of every play.
 - The `ip_addr` column is never loaded into the database, so the LLM can't see it.
 - The LLM gets the table schema plus the results of the queries it runs, not your raw history. Query results are sent to the LLM provider you configure.
-- Model-written SQL is limited to single `SELECT`/`WITH` queries, and DuckDB's file and network access is turned off after loading.
+- Model-written SQL must be a single read-only `SELECT`; DuckDB's own parser checks this, not a text match. DuckDB's file and network access is turned off after loading.
+- The dev server listens only on `127.0.0.1` and rejects requests to `/api/ask` from other websites, so a page you visit can't spend your API credits.
 
 ## Troubleshooting
 

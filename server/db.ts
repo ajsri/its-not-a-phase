@@ -1,4 +1,4 @@
-import { DuckDBInstance, type DuckDBConnection } from '@duckdb/node-api'
+import { DuckDBInstance, StatementType, type DuckDBConnection } from '@duckdb/node-api'
 
 // Recursive so the unzipped export folder can be dropped into data/ as-is.
 const DATA_GLOB = 'data/**/Streaming_History_Audio_*.json'
@@ -69,12 +69,13 @@ export async function describePlays() {
 }
 
 export async function runSql(sql: string) {
-  const trimmed = sql.trim().replace(/;\s*$/, '')
-  if (!/^(select|with)\b/i.test(trimmed) || trimmed.includes(';')) {
-    throw new Error('Only a single SELECT/WITH query is allowed')
-  }
   const conn = await getDb()
-  const rows = (await conn.runAndReadAll(trimmed)).getRowObjectsJson()
+  // Let DuckDB's parser decide: a text check misses things like `WITH x AS (...) DELETE ...`.
+  const statements = await conn.extractStatements(sql)
+  if (statements.count !== 1) throw new Error('Only a single SELECT query is allowed')
+  const prepared = await statements.prepare(0)
+  if (prepared.statementType !== StatementType.SELECT) throw new Error('Only a single SELECT query is allowed')
+  const rows = (await prepared.runAndReadAll()).getRowObjectsJson()
   return {
     rowCount: rows.length,
     truncated: rows.length > MAX_ROWS,

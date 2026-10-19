@@ -11,6 +11,13 @@ function api(): Plugin {
           res.statusCode = 405
           return res.end()
         }
+        // Block other websites from POSTing here and spending API credits. Requiring JSON forces a CORS
+        // preflight (which Vite rejects for foreign origins), and the Origin check covers the rest.
+        const origin = req.headers.origin
+        if (!req.headers['content-type']?.startsWith('application/json') || (origin && origin !== `http://${req.headers.host}`)) {
+          res.statusCode = 403
+          return res.end()
+        }
         try {
           let body = ''
           for await (const chunk of req) body += chunk

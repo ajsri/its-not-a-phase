@@ -167,6 +167,8 @@ export function logout() {
 // GET/POST/etc. against the Web API. `path` may be "/me" or a full URL (e.g. a `next` link).
 export async function spotifyFetch(path: string, init: RequestInit = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`
+  // Never send the bearer token anywhere but the Spotify API.
+  if (!url.startsWith(`${API_BASE}/`)) throw new Error(`Only ${API_BASE} URLs are allowed`)
   const res = await fetch(url, {
     ...init,
     headers: { ...init.headers, Authorization: `Bearer ${await getAccessToken()}` },
